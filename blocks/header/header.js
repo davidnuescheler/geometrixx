@@ -1,5 +1,13 @@
 import { getMetadata } from '../../scripts/aem.js';
+import { buildLanguageUrl, getPathLanguage, isLocalizedPath } from '../../scripts/i18n.js';
 import { loadFragment } from '../fragment/fragment.js';
+
+const LANGUAGES = [
+  { code: 'en', label: 'English' },
+  { code: 'fr', label: 'Français' },
+  { code: 'de', label: 'Deutsch' },
+  { code: 'es', label: 'Español' },
+];
 
 // media query match that indicates mobile/tablet width
 const isDesktop = window.matchMedia('(min-width: 900px)');
@@ -109,6 +117,42 @@ function toggleMenu(nav, navSections, forceExpanded = null) {
 }
 
 /**
+ * Builds the header language switcher for supported locales.
+ * @returns {HTMLElement} Language navigation element
+ */
+function buildLanguageSwitcher() {
+  const current = getPathLanguage();
+  const langNav = document.createElement('div');
+  langNav.className = 'nav-lang';
+  langNav.setAttribute('role', 'navigation');
+  langNav.setAttribute('aria-label', 'Language');
+
+  const list = document.createElement('ul');
+  LANGUAGES.forEach(({ code, label }) => {
+    const item = document.createElement('li');
+    if (code === current) {
+      const currentEl = document.createElement('span');
+      currentEl.className = 'nav-lang-current';
+      currentEl.setAttribute('aria-current', 'true');
+      currentEl.textContent = code.toUpperCase();
+      currentEl.title = label;
+      item.append(currentEl);
+    } else {
+      const link = document.createElement('a');
+      link.href = buildLanguageUrl(code);
+      link.textContent = code.toUpperCase();
+      link.title = label;
+      link.setAttribute('hreflang', code);
+      item.append(link);
+    }
+    list.append(item);
+  });
+
+  langNav.append(list);
+  return langNav;
+}
+
+/**
  * loads and decorates the header, mainly the nav
  * @param {Element} block The header block element
  */
@@ -163,6 +207,16 @@ export default async function decorate(block) {
   // prevent mobile nav behavior on window resize
   toggleMenu(nav, navSections, isDesktop.matches);
   isDesktop.addEventListener('change', () => toggleMenu(nav, navSections, isDesktop.matches));
+
+  if (isLocalizedPath()) {
+    let navTools = nav.querySelector('.nav-tools');
+    if (!navTools) {
+      navTools = document.createElement('div');
+      navTools.className = 'nav-tools';
+      nav.append(navTools);
+    }
+    navTools.append(buildLanguageSwitcher());
+  }
 
   const navWrapper = document.createElement('div');
   navWrapper.className = 'nav-wrapper';

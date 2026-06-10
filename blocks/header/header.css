@@ -269,4 +269,45 @@ header nav .nav-sections ul > li > ul > li {
 /* tools */
 header nav .nav-tools {
   grid-area: tools;
+  align-items: center;
+  display: flex;
+  gap: 16px;
+  justify-content: flex-end;
+}
+
+/* language switcher */
+header nav .nav-tools .nav-lang ul {
+  display: flex;
+  gap: 4px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+header nav .nav-tools .nav-lang a,
+header nav .nav-tools .nav-lang .nav-lang-current {
+  border-radius: 4px;
+  display: inline-block;
+  font-size: var(--body-font-size-xs);
+  font-weight: 600;
+  line-height: 1;
+  min-width: 2rem;
+  padding: 0.4rem 0.5rem;
+  text-align: center;
+  text-decoration: none;
+}
+
+header nav .nav-tools .nav-lang a:any-link {
+  color: var(--dark-color);
+}
+
+header nav .nav-tools .nav-lang a:hover,
+header nav .nav-tools .nav-lang a:focus-visible {
+  background-color: var(--light-color);
+  color: var(--text-color);
+}
+
+header nav .nav-tools .nav-lang .nav-lang-current {
+  background-color: var(--link-color);
+  color: var(--background-color);
 }
