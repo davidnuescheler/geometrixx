@@ -1,0 +1,9 @@
+.magic-banner {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.magic-banner .magic-banner-layout-hidden {
+  display: none;
+}
