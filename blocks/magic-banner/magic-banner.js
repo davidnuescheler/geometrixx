@@ -237,15 +237,37 @@ function getWacLink(block) {
 
 /**
  * Collects authored plain text from the block, one non-empty line per text run.
+ * Omits the wac template link and any line that is only that iframe URL.
  * @param {Element} block The block element
+ * @param {HTMLAnchorElement} [wacLink] Link used as the iframe src
  * @returns {string}
  */
-function getBlockPlainText(block) {
-  return block.innerText
+function getBlockPlainText(block, wacLink = null) {
+  const clone = block.cloneNode(true);
+  if (wacLink) {
+    const href = wacLink.getAttribute('href');
+    clone.querySelectorAll('a[href]').forEach((a) => {
+      if (a.getAttribute('href') === href || isWacHref(a.getAttribute('href'))) a.remove();
+    });
+  }
+
+  const lines = clone.innerText
     .split(/\n+/)
     .map((line) => line.trim())
-    .filter(Boolean)
-    .join('\n');
+    .filter(Boolean);
+
+  if (!wacLink) return lines.join('\n');
+
+  const href = wacLink.getAttribute('href');
+  const url = new URL(href.startsWith('wac.') ? `https://${href}` : href, window.location.href);
+  const iframeUrls = new Set([
+    href,
+    url.href,
+    url.origin + url.pathname,
+    url.host + url.pathname,
+  ]);
+
+  return lines.filter((line) => !iframeUrls.has(line)).join('\n');
 }
 
 /**
@@ -256,7 +278,7 @@ function getBlockPlainText(block) {
 function decorateWacIframe(block, link) {
   const href = link.getAttribute('href');
   const url = new URL(href.startsWith('wac.') ? `https://${href}` : href, window.location.href);
-  url.searchParams.set('content', getBlockPlainText(block));
+  url.searchParams.set('content', getBlockPlainText(block, link));
 
   const iframe = document.createElement('iframe');
   iframe.classList.add('magic-banner');
