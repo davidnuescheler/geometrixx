@@ -3,7 +3,7 @@
  * Fetches a referenced SVG and replaces the block with it in the DOM.
  * SVG text nodes tagged with (selector) are filled entirely from block content.
  * Elements tagged mb-img-N with a url() fill use the Nth block image as fill.
- * Links to a wac.* host load an iframe instead, with block innerHTML as ?content=.
+ * Links to a wac.* host load an iframe instead, with block plain text as ?content=.
  */
 
 const PLACEHOLDER_PATTERN = /\(([^)]+)\)/;
@@ -236,14 +236,27 @@ function getWacLink(block) {
 }
 
 /**
- * Replaces the block with an iframe pointed at the wac URL, passing authored HTML.
+ * Collects authored plain text from the block, one non-empty line per text run.
+ * @param {Element} block The block element
+ * @returns {string}
+ */
+function getBlockPlainText(block) {
+  return block.innerText
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .join('\n');
+}
+
+/**
+ * Replaces the block with an iframe pointed at the wac URL, passing authored plain text.
  * @param {Element} block The block element
  * @param {HTMLAnchorElement} link The wac link
  */
 function decorateWacIframe(block, link) {
   const href = link.getAttribute('href');
   const url = new URL(href.startsWith('wac.') ? `https://${href}` : href, window.location.href);
-  url.searchParams.set('content', block.innerHTML);
+  url.searchParams.set('content', getBlockPlainText(block));
 
   const iframe = document.createElement('iframe');
   iframe.classList.add('magic-banner');
