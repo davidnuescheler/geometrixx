@@ -3,6 +3,7 @@
  * Fetches a referenced SVG and replaces the block with it in the DOM.
  * SVG text nodes tagged with (selector) are filled entirely from block content.
  * Elements tagged mb-img-N with a url() fill use the Nth block image as fill.
+ * Links to a wac.* host load an iframe instead, with block innerHTML as ?content=.
  */
 
 const PLACEHOLDER_PATTERN = /\(([^)]+)\)/;
@@ -210,10 +211,60 @@ function setupResponsiveSvg(svg, images = []) {
 }
 
 /**
+ * Returns true when a URL points at a wac.* host (or a bare wac.* href).
+ * @param {string} href Link href
+ * @returns {boolean}
+ */
+function isWacHref(href) {
+  if (!href) return false;
+  if (href.startsWith('wac.')) return true;
+  try {
+    return new URL(href, window.location.href).hostname.startsWith('wac.');
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Finds the first authored link that targets a wac.* URL.
+ * @param {Element} block The block element
+ * @returns {HTMLAnchorElement|null}
+ */
+function getWacLink(block) {
+  return [...block.querySelectorAll('a[href]')].find((a) => isWacHref(a.getAttribute('href')))
+    || null;
+}
+
+/**
+ * Replaces the block with an iframe pointed at the wac URL, passing authored HTML.
+ * @param {Element} block The block element
+ * @param {HTMLAnchorElement} link The wac link
+ */
+function decorateWacIframe(block, link) {
+  const href = link.getAttribute('href');
+  const url = new URL(href.startsWith('wac.') ? `https://${href}` : href, window.location.href);
+  url.searchParams.set('content', block.innerHTML);
+
+  const iframe = document.createElement('iframe');
+  iframe.classList.add('magic-banner');
+  iframe.src = url.toString();
+  iframe.title = link.textContent?.trim() || 'Magic banner';
+  iframe.setAttribute('loading', 'lazy');
+
+  block.replaceWith(iframe);
+}
+
+/**
  * Loads and decorates the magic-banner block.
  * @param {Element} block The block element
  */
 export default async function decorate(block) {
+  const wacLink = getWacLink(block);
+  if (wacLink) {
+    decorateWacIframe(block, wacLink);
+    return;
+  }
+
   const link = block.querySelector('a[href$=".svg"]');
   const path = link ? link.getAttribute('href') : block.textContent.trim();
   const label = link?.textContent?.trim();
