@@ -312,6 +312,7 @@ export default async function decorate(block) {
   const images = getBlockImages(block);
   const banner = document.importNode(svg, true);
   banner.classList.add('magic-banner');
+  banner.classList = block.classList;
 
   if (label && !banner.getAttribute('aria-label') && !banner.querySelector('title')) {
     banner.setAttribute('role', 'img');

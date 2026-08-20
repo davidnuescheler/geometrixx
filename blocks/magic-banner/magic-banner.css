@@ -25,3 +25,7 @@ iframe.magic-banner {
 .magic-banner .magic-banner-layout-hidden {
   display: none;
 }
+
+.magic-banner.large {
+  min-height: 500px;
+}
